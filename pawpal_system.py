@@ -63,14 +63,16 @@ class Scheduler:
     def __init__(self, owner: Owner):
         self.owner = owner
 
-        # maps task_id (int) -> Task, aggregated across all pets
+        # maps task_id (int) -> (Task, pet), aggregated across all pets
         self.task_dict = {}
 
         self._next_id = 1 # internal
 
     def add_task(self, pet_name: str, **kwargs) -> int:
-        """Create a Task for a pet by name, auto-set priority from that pet's preferences,
-        store it on the pet and in task_dict, and return the assigned task ID."""
+        """
+        Create a Task for a pet by name, auto-set priority from that pet's preferences,
+        store it on the pet and in task_dict, and return the assigned task ID.    
+        """
         pet = next(p for p in self.owner.pets if p.name == pet_name)
 
         task = Task()
@@ -84,23 +86,31 @@ class Scheduler:
         while self._next_id in self.task_dict:
             self._next_id += 1
 
-        self.task_dict[self._next_id] = task
+        self.task_dict[self._next_id] = (task, pet)
         task_id = self._next_id
         self._next_id += 1
         return task_id
+    
+    def mark_as_complete(self, task_id: int) -> bool: 
+        """
+        Utilizes self.edit_task() to mark as complete. 
+        Returns True
+        """
+        self.edit_task(task_id, completed=True)
+        return True
 
     def remove_task(self, task_id: int) -> int:
         """Remove a task by its ID and return the ID."""
-        task = self.task_dict.pop(task_id)
+        task = self.task_dict.pop(task_id)[0]
         for pet in self.owner.pets:
             if task in pet.tasks:
                 pet.tasks.remove(task)
                 break
         return task_id
-
+    
     def edit_task(self, task_id: int, **kwargs) -> None:
         """Edit a specific task's fields by its ID."""
-        task = self.task_dict[task_id]
+        task = self.task_dict[task_id][0]
         for key, value in kwargs.items():
             setattr(task, key, value)
 
@@ -121,7 +131,7 @@ class Scheduler:
         # Phase 2 (greedy slot): sort selected tasks by score desc, then slot
         #   them into time windows in order.
 
-        tasks = list(self.task_dict.values())
+        tasks = [t for t, _ in self.task_dict.values()]
         if not tasks or not self.owner.time_availability:
             return []
 
@@ -211,7 +221,7 @@ class Scheduler:
         else:
             lines.append("No tasks could be scheduled.")
 
-        excluded = [t for t in self.task_dict.values() if id(t) not in scheduled_ids]
+        excluded = [t for t, _ in self.task_dict.values() if id(t) not in scheduled_ids]
         if excluded:
             lines.append("\nExcluded tasks (did not fit or were outscored):")
             for task in excluded:
