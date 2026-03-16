@@ -38,7 +38,7 @@ class Pet:
         return self.tasks
 
 class Owner:
-    def __init__(self, name: str, pets: List[Pet], time_availability: List[tuple], preferences: dict):
+    def __init__(self, name: str, pets: List[Pet] = [], time_availability: List[tuple] = [], preferences: dict = None):
         self.name = name
 
         # all pets this owner manages
@@ -52,6 +52,10 @@ class Owner:
         else:
             self.preferences = preferences
 
+    def add_pets(self, pet: Pet): 
+        """Append pet to Owner list"""
+        self.pets.append(pet)
+    
     def get_all_tasks(self) -> List[Task]:
         """Return all tasks across all pets."""
         output = []
