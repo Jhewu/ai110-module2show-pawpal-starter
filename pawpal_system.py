@@ -23,7 +23,7 @@ class Task:
         self.completed = False
 
 class Pet:
-    def __init__(self, name: str, preferences: dict):
+    def __init__(self, name: str, preferences: dict = None):
         self.name = name
         if preferences is None:
             self.preferences = {"walks": 3, "feeding": 2, "meds": 1, "play": 3, "grooming": 2}
