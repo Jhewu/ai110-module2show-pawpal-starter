@@ -39,7 +39,9 @@ def main():
 
     # Generate the schedule 
     schedule = scheduler.generate_daily_schedule()
+    reason = scheduler.add_reasoning()
     print(schedule)
+    print(reason)
     
 if __name__ == "__main__": 
     main()
