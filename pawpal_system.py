@@ -181,4 +181,43 @@ class Scheduler:
 
     def add_reasoning(self) -> str:
         """Return a plain-English explanation of why tasks were scheduled as they were."""
-        pass
+        schedule = self.generate_daily_schedule()
+        scheduled_ids = {id(t) for _, t in schedule}
+
+        def score(task):
+            pref = self.owner.preferences.get(task.category, 1)
+            return task.priority + pref
+
+        total_window = sum(
+            (int(e.split(":")[0]) * 60 + int(e.split(":")[1])) -
+            (int(s.split(":")[0]) * 60 + int(s.split(":")[1]))
+            for s, e in self.owner.time_availability
+        )
+
+        lines = [
+            f"Schedule optimizes for the highest combined score "
+            f"(task priority + owner preference) within {total_window} available minutes.\n"
+        ]
+
+        if schedule:
+            lines.append("Scheduled tasks (highest score first):")
+            for time_str, task in schedule:
+                pref = self.owner.preferences.get(task.category, 1)
+                lines.append(
+                    f"  {time_str} — {task.todo!r} | category: {task.category} | "
+                    f"priority {task.priority} + owner pref {pref} = score {score(task)} | "
+                    f"{task.duration} min"
+                )
+        else:
+            lines.append("No tasks could be scheduled.")
+
+        excluded = [t for t in self.task_dict.values() if id(t) not in scheduled_ids]
+        if excluded:
+            lines.append("\nExcluded tasks (did not fit or were outscored):")
+            for task in excluded:
+                lines.append(
+                    f"  {task.todo!r} | score {score(task)} | {task.duration} min — "
+                    f"excluded due to time constraints or lower priority score"
+                )
+
+        return "\n".join(lines)
