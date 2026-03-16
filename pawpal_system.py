@@ -33,15 +33,6 @@ class Pet:
         # tasks belonging to this pet
         self.tasks: List[Task] = []
 
-    def add_task(self, **kwargs) -> Task:
-        """Create a Task from kwargs, auto-set priority from pet preferences, and add it to this pet's list."""
-        task = Task()
-        for key, value in kwargs.items():
-            setattr(task, key, value)
-        task.priority = self.preferences.get(task.category, 2)
-        self.tasks.append(task)
-        return task
-
     def get_tasks(self) -> List[Task]:
         """Return all tasks for this pet."""
         return self.tasks
@@ -77,14 +68,21 @@ class Scheduler:
 
         self._next_id = 1 # internal
 
-    def add_task(self, task: Task) -> int:
-        """Add a new task to the schedule and return its assigned ID."""
+    def add_task(self, pet_name: str, **kwargs) -> int:
+        """Create a Task for a pet by name, auto-set priority from that pet's preferences,
+        store it on the pet and in task_dict, and return the assigned task ID."""
+        pet = next(p for p in self.owner.pets if p.name == pet_name)
 
-        if self._next_id == 1000: 
-            self._next_id = 1 # Reset if it's 1,000 
+        task = Task()
+        for key, value in kwargs.items():
+            setattr(task, key, value)
+        task.priority = pet.preferences.get(task.category, 2)
+        pet.tasks.append(task)
 
-        while self._next_id in self.task_dict: 
-            self._next_id+=1
+        if self._next_id == 1000:
+            self._next_id = 1
+        while self._next_id in self.task_dict:
+            self._next_id += 1
 
         self.task_dict[self._next_id] = task
         task_id = self._next_id
@@ -93,7 +91,11 @@ class Scheduler:
 
     def remove_task(self, task_id: int) -> int:
         """Remove a task by its ID and return the ID."""
-        self.task_dict.pop(task_id)
+        task = self.task_dict.pop(task_id)
+        for pet in self.owner.pets:
+            if task in pet.tasks:
+                pet.tasks.remove(task)
+                break
         return task_id
 
     def edit_task(self, task_id: int, **kwargs) -> None:
