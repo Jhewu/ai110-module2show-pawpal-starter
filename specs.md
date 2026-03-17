@@ -83,6 +83,14 @@ Scheduler
             # edit a specific task based on its ID
         get_tasks_for_pet(pet: Pet) -> List[Task]
             # retrieve all scheduled tasks belonging to a specific pet
+        sort_by_time() -> List[tuple]
+            # returns list of (task_id, Task) from task_dict sorted by scheduled_time ascending
+            # tasks with no scheduled_time are placed at the end
+        filter_task_by_attribute(attribute: str, value=None) -> List[tuple]
+            # returns list of (task_id, Task) filtered by a task attribute or "pet_name"
+            # if value is None, returns tasks where the attribute is truthy
+            # e.g., filter_task_by_attribute("completed", False) -> incomplete tasks
+            #        filter_task_by_attribute("pet_name", "Buddy") -> tasks for pet "Buddy"
         generate_daily_schedule() -> List[tuple]
             # generates and returns a daily schedule based on constraints
             # e.g., [(time, Task)]
@@ -128,6 +136,8 @@ classDiagram
         +edit_task(task_id: int) None
         +mark_as_complete(task_id: int) bool
         +get_tasks_for_pet(pet: Pet) List~Task~
+        +sort_by_time() List~tuple~
+        +filter_task_by_attribute(attribute: str, value) List~tuple~
         +generate_daily_schedule() List~tuple~
         +add_reasoning() str
     }

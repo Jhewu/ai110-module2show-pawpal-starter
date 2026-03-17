@@ -7,10 +7,19 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+Basically, we are building a pet-care assistant application. Where we: 
+- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
+- Consider constraints (time available, priority, owner preferences)
+- Produce a daily plan and explain why it chose that plan
+
+From this I can identify a 4 main classes, described in specs.md
+
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+
+Yes, Claude Code pointed out an initial flaw in my logic, where instead of assigning a date, I can just assign a time and keep everything under one day
 
 ---
 
