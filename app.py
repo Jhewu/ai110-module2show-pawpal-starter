@@ -64,34 +64,29 @@ st.subheader("Time Availability")
 if not st.session_state.owner.time_availability:
     st.session_state.owner.time_availability = [("09:00", "17:00")]
 
-for i, (s, e) in enumerate(st.session_state.owner.time_availability):
-    col1, col2, col3 = st.columns([2, 2, 1])
-    with col1:
-        st.time_input(f"Start {i+1}", value=datetime.strptime(s, "%H:%M").time(), key=f"start_{i}")
-    with col2:
-        st.time_input(f"End {i+1}", value=datetime.strptime(e, "%H:%M").time(), key=f"end_{i}")
-    with col3:
-        st.write("")
-        if st.button("Remove", key=f"remove_{i}"):
-            st.session_state.owner.time_availability.pop(i)
-            st.rerun()
+col_start, col_end = st.columns(2)
+with col_start:
+    new_start = st.time_input("Start", value=datetime.strptime("09:00", "%H:%M").time(), key="new_start")
+with col_end:
+    new_end = st.time_input("End", value=datetime.strptime("17:00", "%H:%M").time(), key="new_end")
 
 if st.button("+ Add Window"):
-    st.session_state.owner.time_availability.append(("09:00", "17:00"))
+    st.session_state.owner.time_availability.append((
+        new_start.strftime("%H:%M"),
+        new_end.strftime("%H:%M")
+    ))
     st.rerun()
 
-# Sync time input values back to owner.time_availability
-st.session_state.owner.time_availability = [
-    (st.session_state[f"start_{i}"].strftime("%H:%M"),
-     st.session_state[f"end_{i}"].strftime("%H:%M"))
-    for i in range(len(st.session_state.owner.time_availability))
-]
-
-# Feedback
-st.markdown("**Current availability:**")
 if st.session_state.owner.time_availability:
-    for s, e in st.session_state.owner.time_availability:
-        st.markdown(f"- {s} → {e}")
+    st.markdown("**Current availability:**")
+    for i, (s, e) in enumerate(st.session_state.owner.time_availability):
+        col1, col2 = st.columns([5, 1])
+        with col1:
+            st.markdown(f"**{s} → {e}**")
+        with col2:
+            if st.button("Remove", key=f"remove_window_{i}"):
+                st.session_state.owner.time_availability.pop(i)
+                st.rerun()
 else:
     st.caption("No time windows set.")
 
@@ -149,4 +144,18 @@ st.caption("This button should call your scheduling logic once you implement it.
 
 if st.button("Generate schedule"):
     schedule = st.session_state.scheduler.generate_daily_schedule()
-    st.info(schedule)
+    if schedule:
+        st.table([
+            {
+                "Time": time_str,
+                "Task": task.todo,
+                "Category": task.category,
+                "Duration (min)": task.duration,
+                "Priority": task.priority,
+            }
+            for time_str, task in schedule
+        ])
+        with st.expander("Why was this schedule chosen?"):
+            st.text(st.session_state.scheduler.add_reasoning())
+    else:
+        st.warning("No tasks could be scheduled. Check that tasks and time windows are set.")

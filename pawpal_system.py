@@ -6,10 +6,6 @@ from typing import List
 > Trace data flow across classes
 > Verify task creation and retrieval
 > Inspect at least one class method carefully
-
-
-
-
 """
 
 class Task:
