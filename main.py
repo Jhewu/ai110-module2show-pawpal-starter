@@ -40,6 +40,9 @@ def main():
     # Generate the schedule 
     schedule = scheduler.generate_daily_schedule()
     reason = scheduler.add_reasoning()
+
+    print(scheduler.sort_by_time())
+    print(scheduler.filter_task_by_attribute('category', 'play'))
     print(schedule)
     print(reason)
     

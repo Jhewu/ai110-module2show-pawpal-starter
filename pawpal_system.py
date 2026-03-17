@@ -118,6 +118,39 @@ class Scheduler:
         """Retrieve all scheduled tasks belonging to a specific pet."""
         return pet.get_tasks()
 
+    def sort_by_time(self) -> List[tuple]:
+        """Return list of (task_id, Task) sorted by scheduled_time ascending.
+
+        scheduled_time is in 'YYYY-MM-DD' format, so lexicographic sort works.
+        Tasks with no scheduled_time ('') are placed at the end.
+        """
+        return sorted(
+            [(task_id, task) for task_id, (task, _) in self.task_dict.items()],
+            key=lambda item: item[1].scheduled_time or "9999-99-99"
+        )
+
+    def filter_task_by_attribute(self, attribute: str, value=None) -> List[tuple]:
+        """Return list of (task_id, Task) filtered by a task attribute or pet name.
+
+        Examples:
+            filter_task_by_attribute("completed", False)   -> incomplete tasks
+            filter_task_by_attribute("completed", True)    -> completed tasks
+            filter_task_by_attribute("completed")          -> tasks where completed is truthy
+            filter_task_by_attribute("pet_name", "Buddy")  -> tasks belonging to pet "Buddy"
+            filter_task_by_attribute("category", "walks")  -> tasks with category "walks"
+        """
+        results = []
+        for task_id, (task, pet) in self.task_dict.items():
+            if attribute == "pet_name":
+                match = pet.name == value
+            elif value is None:
+                match = bool(getattr(task, attribute, False))
+            else:
+                match = getattr(task, attribute, None) == value
+            if match:
+                results.append((task_id, task))
+        return results
+
     def generate_daily_schedule(self) -> List[tuple]:
         """Generate and return a daily schedule based on constraints and priorities.
 
